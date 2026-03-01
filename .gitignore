@@ -1,5 +1,7 @@
 # Node
 node_modules/
+web/node_modules/
+worker/node_modules/
 .next/
 dist/
 
@@ -7,9 +9,11 @@ dist/
 .env
 .env.local
 .env.production
+worker/.env
 
 # Python
 venv/
+research/venv/
 __pycache__/
 *.pyc
 
