@@ -1,26 +1,69 @@
 @import "tailwindcss";
 
+/* ── ZK-Aid Design Tokens ── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0E1117;
+  --foreground: #E2E8F0;
+  --accent-emerald: #10B981;
+  --accent-amber-from: #F59E0B;
+  --accent-amber-to: #D97706;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-border-hover: rgba(255, 255, 255, 0.18);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-emerald-accent: var(--accent-emerald);
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ── Base ── */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+/* ── Subtle Background Radial Glow ── */
+.bg-zkaid {
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 80%, rgba(99, 102, 241, 0.08), transparent),
+    radial-gradient(ellipse 70% 50% at 80% 20%, rgba(16, 185, 129, 0.06), transparent),
+    var(--background);
+}
+
+/* ── Data Lines (optional ambient decoration) ── */
+.bg-data-lines {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(16, 185, 129, 0.03) 0px,
+      rgba(16, 185, 129, 0.03) 1px,
+      transparent 1px,
+      transparent 80px
+    );
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+/* ── Selection ── */
+::selection {
+  background: rgba(16, 185, 129, 0.3);
+  color: #fff;
 }
