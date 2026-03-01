@@ -12,41 +12,47 @@ export default function StudentPage() {
     setLoading(true);
     setStatus("Generating zero-knowledge proof...");
 
-    const { data: sessionData } = await supabase.auth.getSession();
-
-    if (!sessionData.session) {
-      alert("Not authenticated");
-      setLoading(false);
-      return;
-    }
-
     try {
-      // 🔹 For now using dummy test values
-      // Later we will connect these to form inputs
-      const { proof, publicSignals, eligible } = await generateProof({
+      const { proof, publicSignals } = await generateProof({
         x1: 10,
         x2: 20,
         x3: 5,
       });
 
-      setStatus("Proof generated. Submitting application...");
+      setStatus("Proof generated. Preparing submission...");
 
-      const { error } = await supabase.from("applications").insert({
-        student_id: sessionData.session.user.id,
-        proof,
-        public_signals: publicSignals,
-        eligibility: eligible,
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      if (!sessionData.session) {
+        throw new Error("Not authenticated");
+      }
+
+      const accessToken = sessionData.session.access_token;
+
+      setStatus("Submitting application...");
+
+      const response = await fetch("/api/submit-application", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          proof: JSON.stringify(proof),              // 🔥 stringify
+          publicSignals: JSON.stringify(publicSignals), // 🔥 stringify
+        }),
       });
 
-      if (error) {
-        console.error(error);
-        alert(error.message);
-      } else {
-        setStatus("Application submitted with ZK proof successfully!");
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Submission failed");
       }
-    } catch (err) {
-      console.error("Proof generation failed:", err);
-      alert("Proof generation failed. Check console.");
+
+      setStatus("Application submitted successfully! Pending verification.");
+    } catch (err: any) {
+      console.error("Submission error:", err);
+      alert(err.message || "Something went wrong.");
     }
 
     setLoading(false);
@@ -61,7 +67,7 @@ export default function StudentPage() {
         className="bg-blue-500 text-white px-4 py-2 disabled:opacity-50"
         onClick={handleSubmitApplication}
       >
-        {loading ? "Processing..." : "Submit Application (ZK)"}
+        {loading ? "Processing..." : "Submit Application (ZK Verified)"}
       </button>
 
       {status && <p className="mt-4">{status}</p>}
