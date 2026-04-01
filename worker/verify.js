@@ -70,6 +70,7 @@ function safeParse(value) {
   }
 }
 
+
 async function verifyPending() {
   if (isProcessing) {
     log("INFO", "Previous cycle still running, skipping...");
