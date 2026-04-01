@@ -98,7 +98,9 @@ async function verifyPending() {
         log("ERROR", `Invalid proof format for ${app.id}`);
         await updateApplication(app.id, {
           status: "invalid",
-          eligibility: false
+          eligibility: false,
+          verified: false,
+          audit_required: true,
         });
         continue;
       }
@@ -115,6 +117,11 @@ async function verifyPending() {
         );
       } catch (err) {
         log("ERROR", `Verification error for ${app.id}`, err);
+        await updateApplication(app.id, {
+          status: "audit",
+          verified: false,
+          audit_required: true,
+        });
         continue;
       }
 
@@ -124,7 +131,9 @@ async function verifyPending() {
 
       await updateApplication(app.id, {
         status: isValid ? "verified" : "invalid",
-        eligibility: isValid ? publicSignals[0] === "1" : false
+        eligibility: isValid ? publicSignals[0] === "1" : false,
+        verified: isValid,
+        audit_required: false,
       });
 
       log("INFO", `Updated application ${app.id}`);
@@ -136,6 +145,7 @@ async function verifyPending() {
   }
 }
 
+verifyPending();
 setInterval(verifyPending, POLL_INTERVAL);
 
 process.on("SIGINT", () => {
