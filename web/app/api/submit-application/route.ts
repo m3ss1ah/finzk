@@ -5,6 +5,17 @@ import { createClient } from "@supabase/supabase-js";
 
 export async function POST(request: Request) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
+      return NextResponse.json(
+        { error: "Missing required server configuration" },
+        { status: 500 }
+      );
+    }
+
     const authHeader = request.headers.get("authorization");
 
     if (!authHeader) {
@@ -14,8 +25,8 @@ export async function POST(request: Request) {
     const token = authHeader.replace("Bearer ", "");
 
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      supabaseUrl,
+      supabaseAnonKey,
       {
         global: {
           headers: {
@@ -36,6 +47,28 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     const { proof, publicSignals } = body;
+
+    // Ensure FK target exists for applications.student_id -> profiles.id.
+    const serviceClient = createClient(supabaseUrl, supabaseServiceRoleKey);
+    const { error: profileError } = await serviceClient
+      .from("profiles")
+      .upsert(
+        {
+          id: user.id,
+          role: "student",
+        },
+        {
+          onConflict: "id",
+          ignoreDuplicates: true,
+        }
+      );
+
+    if (profileError) {
+      return NextResponse.json(
+        { error: `Profile setup failed: ${profileError.message}` },
+        { status: 500 }
+      );
+    }
 
     const { error } = await supabase.from("applications").insert({
       student_id: user.id,
